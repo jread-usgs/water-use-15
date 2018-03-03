@@ -53,6 +53,9 @@ info:
     sf:
       repo: CRAN
       version: 0.5.4
+    dplyr:
+      repo: CRAN
+      version: 0.7.4
       
   contributors:
     -

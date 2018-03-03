@@ -36,7 +36,6 @@ visualize.make_circle_map <- function(viz){
 visualize.make_pie_map <- function(viz){
   deps <- readDepends(viz)
   circle_sp <- deps[["sp_circles"]]
-  rad_multiplier <- 8500 # this is projection-specific. 
   
   crs <- viz[["visualize_args"]][["crs"]]
   wu_type <- viz[["visualize_args"]][["wu_type"]]
@@ -57,23 +56,39 @@ visualize.make_pie_map <- function(viz){
   map_data_county <- sf::st_transform(map_data_county, crs)
   
   
-  png(viz[["location"]], width = 10, height = 6.0, res=450, units = 'in')
+  circle_sp_transf@data <- circle_sp_transf@data[
+    c("radius_total", "total", "irrigation", "industrial", "thermoelectric", "publicsupply")] %>% 
+    mutate(irr_diff = total-irrigation) %>% 
+    mutate(ind_frac = industrial/irr_diff, ther_frac = thermoelectric/irr_diff, pub_frac = publicsupply/irr_diff)
   
+  browser()
+  for (i in 1:10){
+    
+  }
+  plot_pies(viz[["location"]], map_data = map_data_county, pies = circle_sp_transf)
+  
+}
+
+plot_pies <- function(filename, width = 10, height = 6.0, res = 450, map_data, pies){
+  
+  rad_multiplier <- 8500 # this is projection-specific.
+  
+  png(filename, width = width, height = height, res = res, units = 'in')
   par(mai=c(0,0,0,0), omi=c(0,0,0,0), xaxs = 'i', yaxs = 'i')
-  plot(sf::st_geometry(map_data_usa), col = "#f1f1f1", border = "white")
-  plot(sf::st_geometry(map_data_county), col = NA, border = "white", add=TRUE, lwd = 0.5)
+  
+  plot(sf::st_geometry(map_data), col = "#f1f1f1", border = "white", lwd = 0.5)
   
   # start w/ irrigation, fill around the categories (make sure they add up!)
   # note: they don't add up because we aren't including all
   categories <- c("irrigation", "industrial", "thermoelectric", "publicsupply")
   
-  for (j in seq_len(length(circle_sp_transf))){
+  for (j in seq_len(length(pies))){
     # this is in a loop because it is throwaway code: 
-    r <- circle_sp_transf$radius_total[j] *rad_multiplier
-    c.x <- coordinates(circle_sp_transf)[j, ][['x']]
-    c.y <- coordinates(circle_sp_transf)[j, ][['y']]
+    r <- pies$radius_total[j] *rad_multiplier
+    c.x <- coordinates(pies)[j, ][['x']]
+    c.y <- coordinates(pies)[j, ][['y']]
     for (cat in categories){
-      cat_angle <- circle_sp_transf[[cat]][j] / circle_sp_transf[['total']][j]*2*pi
+      cat_angle <- pies[[cat]][j] / pies[['total']][j]*2*pi
       if (cat == head(categories, 1L)){
         # start the first category mirrorer relative to the top
         angle_from <- pi/2 - cat_angle/2
@@ -89,7 +104,7 @@ visualize.make_pie_map <- function(viz){
       }
     }
   }
-
+  
   dev.off()
 }
 
