@@ -61,11 +61,25 @@ visualize.make_pie_map <- function(viz){
     mutate(irr_diff = total-irrigation) %>% 
     mutate(ind_frac = industrial/irr_diff, ther_frac = thermoelectric/irr_diff, pub_frac = publicsupply/irr_diff)
   
-  browser()
-  for (i in 1:10){
+  basefile <- strsplit(viz[["location"]], '[.]')[[1]][1] # hack ALERT
+  
+  transition_percent <- seq(0, to = 1, length.out = 10)
+  for (i in seq_len(length(transition_percent))){
+    pie_data <- circle_sp_transf
+    
+    pie_data@data <- pie_data@data %>% 
+      mutate(orig_tot = total,
+             total = total - irr_diff*transition_percent[i], 
+             radius_total = radius_total*total/orig_tot, # not actually proper scaling rate...
+             thermoelectric = (total - irrigation) * ther_frac, 
+             industrial = (total - irrigation) * ind_frac,
+             publicsupply = (total - irrigation) * pub_frac)
+    print(paste0(basefile, i, '.png'))
+    
+    plot_pies(paste0(basefile, i, '.png'), map_data = map_data_county, pies = pie_data)
     
   }
-  plot_pies(viz[["location"]], map_data = map_data_county, pies = circle_sp_transf)
+  
   
 }
 
@@ -96,11 +110,11 @@ plot_pies <- function(filename, width = 10, height = 6.0, res = 450, map_data, p
         angle_from <- angle_to
       }
       angle_to <- angle_from + cat_angle
-      if (!is.na(cat_angle) & cat_angle > 0.01){
+      if (!is.na(angle_from) & !is.na(angle_to) & cat_angle > 0.01){
         segments <- make_arc(c.x, c.y, r = r, angle_from, angle_to)
         polygon(c(c.x, segments$x, c.x), c(c.y, segments$y, c.y), 
-                border = color_by_wu_type(cat)$outline, 
-                col = color_by_wu_type(cat)$fill, lwd=0.25)
+                border = NA, 
+                col = color_by_wu_type(cat)$fill)
       }
     }
   }
