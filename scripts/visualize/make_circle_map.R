@@ -77,7 +77,7 @@ visualize.make_pie_map <- function(viz){
     print(paste0(basefile, i, '.png'))
     
     plot_pies(paste0(basefile, i, '.png'), map_data = map_data_county, pies = pie_data)
-    
+    # used https://ezgif.com/maker with 10 ms and 100 ms for the pause frames
   }
   
   
