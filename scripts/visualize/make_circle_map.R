@@ -91,7 +91,7 @@ visualize.make_pie_map <- function(viz){
         polygon(c(c.x, segments$x, c.x), c(c.y, segments$y, c.y), 
                 border = NA,
                 col = color_by_wu_type(cat)$fill, lwd=0.25)
-        lines(segments$x, segments$y, lwd=0.5, col = color_by_wu_type(cat)$outline)
+        lines(segments$x, segments$y, lwd=0.25, col = color_by_wu_type(cat)$outline)
       }
     }
     if (!is.na(r) & cat == tail(categories, 1L) & angle_to < 2*pi + orig_ang){
@@ -100,7 +100,7 @@ visualize.make_pie_map <- function(viz){
       polygon(c(c.x, segments$x, c.x), c(c.y, segments$y, c.y), 
               border = NA,
               col = color_by_wu_type('other')$fill, lwd=0.25)
-      lines(segments$x, segments$y, lwd=0.5, col = color_by_wu_type(cat)$outline)
+      lines(segments$x, segments$y, lwd=0.25, col = color_by_wu_type('other')$outline)
     }
   }
 
@@ -130,6 +130,6 @@ color_by_wu_type <- function(wu_type) {
                              fill = rgb(155/255, 197/255, 61/255, 0.8)),
          "industrial" = list(outline = rgb(148/255, 40/255, 32/255),
                              fill = rgb(186/255, 50/255, 40/255, 0.8)),
-         "other" = list(outline = rgb(110/255, 90/255, 84/255),
-                             fill = rgb(138/255, 113/255, 106/255, 0.8)))
+         "other" = list(outline = rgb(138/255, 113/255, 106/255),
+                             fill = rgb(138/255, 113/255, 106/255, 0.6)))
 }
