@@ -103,7 +103,24 @@ visualize.make_pie_map <- function(viz){
       lines(segments$x, segments$y, lwd=0.25, col = color_by_wu_type('other')$outline)
     }
   }
-
+  
+  strt_x <- -1990000
+  strt_y <- -2000000
+  box_w <- 60000
+  y_bump <- 30000
+  text_st <- 0
+  
+  categories <- c('other', rev(categories))
+  for (cat in categories){
+    polygon(c(strt_x, strt_x+box_w, strt_x+box_w, strt_x, strt_x), 
+            c(strt_y, strt_y, strt_y+box_w, strt_y+box_w, strt_y), 
+            col = color_by_wu_type(cat)$fill, 
+            border = color_by_wu_type(cat)$outline,
+            lwd=0.5)
+    text(x = strt_x+box_w+text_st, y = strt_y+box_w/2, labels = cat, cex = 1.0, pos = 4)
+    strt_y <- strt_y+y_bump+box_w
+  }
+  
   dev.off()
 }
 
