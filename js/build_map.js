@@ -3,7 +3,8 @@ var chart_width     =   1000;
 var chart_height    =   700;
 
 // define categories
-var tempCategories = ["total", "thermoelectric", "publicsupply", "irrigation", "industrial"];
+var tempCategories = ["total", "thermoelectric", "publicsupply", 
+                      "irrigation", "industrial", "piechart"];
 
 // Projection
 var projection = albersUsaTerritories()
@@ -13,22 +14,22 @@ var projection = albersUsaTerritories()
     
 var buildPath = d3.geoPath()
     .projection(projection);
-    
-//Create container
-var container = d3.select('body')
-  .append('div')
-  .attr('id', 'content-container');
 
 // circle scale
 var scaleCircles = d3.scaleSqrt()
   .range([0, 20]);
+    
+//Create container
+var container = d3.select('body')
+  .append('div')
+  .classed('svg-container', true);
 
 // Setup tooltips
 var tooltipDiv = d3.select("body").append("div")
       .classed("tooltip hidden", true);
 
 // Create SVG
-var svg = d3.select("#content-container")
+var svg = d3.select(".svg-container")
     .append("svg")
     .attr('viewBox', '0 0 ' + chart_width + ' ' + chart_height + '')
 	  .attr('preserveAspectRatio', 'xMidYMid');
@@ -43,14 +44,15 @@ var mapBackground = map.append("rect")
   .on('click', zoomToFromState);
 
 // Datasets
-var stateData, stateDict, countyDict;
+var stateData, countyCentroids, pieFormData;
 var countyData = new Map();
+var piesBaked = false;
+var circlesAdded = false;
 
 d3.queue()
-  .defer(d3.json, "data/state_boundaries.geojson")
-  .defer(d3.json, "data/states.json")
-  .defer(d3.json, "data/counties.json") // could load this later
-  .defer(d3.json, "data/county_centroids.json")
+  .defer(d3.json, "data/state_boundaries_USA.json")
+  .defer(d3.json, "data/county_centroids_wu.json")
+  .defer(d3.json, "data/wu_data_15_range.json")
   .await(create_map);
 
 // Zoom status: default is nation-wide
@@ -61,6 +63,8 @@ if(!activeView) activeView = 'USA';
 // let's use full-length space-removed lower-case labels, e.g. publicsupply and thermoelectric
 var activeCategory = getHash('category');
 if(!activeCategory) activeCategory = 'total';
+// default for prev is total
+var prevCategory = 'total';
 
 svg.append("text")
   .attr("id", "maptitle")
@@ -68,7 +72,7 @@ svg.append("text")
   .attr("y", chart_height*0.10); // bring in 10% of chart height
 
 // Initialize page info
-updateTitle();
+updateTitle(activeCategory);
 setHash('view', activeView);
 setHash('category', activeCategory);
 
@@ -79,14 +83,34 @@ function create_map() {
 	if (error) throw error;
 
 	// the rest of the indices of arguments are all the other arguments passed in -
-	// so in this case, all of the results from q.await
-	stateData = arguments[1];
-	stateDict = arguments[2];
-	countyDict = arguments[3];
-	countyCentroids = arguments[4];
+	// so in this case, all of the results from q.await. Immediately convert to
+	// geojson so we have that converted data available globally.
+	stateData = topojson.feature(arguments[1], arguments[1].objects.states);
+	countyCentroids = topojson.feature(arguments[2], arguments[2].objects.foo);
 	
-  addStates(map, stateData, stateDict);
-  addCentroids(map, countyCentroids);
+  // set up scaling for circles
+  var rangeWateruse = arguments[3],
+      minWateruse = rangeWateruse[0],
+      maxWateruse = rangeWateruse[1];
+  
+  // update circle scale with data
+  scaleCircles = scaleCircles
+    .domain(rangeWateruse);
+
+  // add legend
+  addLegend(minWateruse, maxWateruse);
+  
+  // add the main, active map features
+  addStates(map, stateData);
+  if(activeCategory === 'piechart') {
+    // prepare and then use the centroid data for presentation as pie charts
+    pieFormData = pieData(countyCentroids);
+    updatePieCharts();
+  } else {
+    // first render circles, and then (after we're otherwise good to go) prepare the centroid data for presentation as pie charts
+    updateCircles(activeCategory);
+    pieFormData = pieData(countyCentroids);
+  }
   
   // get started downloading county data right away.
   // for now, pretend that we know that state '01' is the most likely state
@@ -97,7 +121,7 @@ function create_map() {
 
 }
 
-var buttonContainer = d3.select('#content-container')
+var buttonContainer = d3.select('.svg-container')
   .append('div')
   .attr('id', 'button-container');
   
@@ -115,12 +139,13 @@ var categoryButtons = d3.select('#button-container')
     return d;
   })
   .on('click', function(d){
+    prevCategory = activeCategory;
     activeCategory = d.toLowerCase(); // put this here so it only changes on click
     updateCategory(activeCategory);
   })
   .on('mouseover', function(d){
-    updateCategory(d.toLowerCase());
+    updateCategory(d.toLowerCase(), activeCategory);
   })
   .on('mouseout', function(d){
-    updateCategory(activeCategory);
+    updateCategory(activeCategory, d.toLowerCase());
   });
