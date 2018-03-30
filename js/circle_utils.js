@@ -9,8 +9,6 @@ function addTins() {
     .enter()
     .append('circle')
     .classed('tin', true)
-    .attr("cx", 0)
-    .attr("cy", 0)
     .attr("r", 1)
     // this is OK to not worry about it changing on hover (activeCategory only changes on click) 
     // because people won't be able to see tooltips at the same time anyways
