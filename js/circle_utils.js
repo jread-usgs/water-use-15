@@ -1,46 +1,41 @@
-function addTins() {
+function addPieTins() {
   
   // uses globals map, countyCentroids, scaleCircles, activeCategory
   
-  map.selectAll('g.pie').selectAll('.tin')
+  map.selectAll('g.pie-scales').selectAll('.tin')
     .data(function(d) {
       return [d.properties];
     })
     .enter()
     .append('circle')
     .classed('tin', true)
-    .attr("r", 1)
-    // this is OK to not worry about it changing on hover (activeCategory only changes on click) 
-    // because people won't be able to see tooltips at the same time anyways
-    .on("mouseover", function(d) { showToolTip(this, d, activeCategory); })
-    .on("mouseout", function(d) { hideTooltip(this, d); });
+    .attr("id", function(d) { return "circle-"+d.GEOID; })
+    .attr("r", 1);
     
   tinsAdded = true;
   
-  // these newly added circles won't work until updateCircles is called, but
-  // since this function always gets called from updateCircles, that should be fine
+  // these newly added circles won't work until updatePieTins is called, but
+  // since this function always gets called from updatePieTins, that should be fine
 }
 
-function updatePieTins(category, delay, duration) {
+function updatePieTins(category, delay) {
   
   // add the circles if needed
   if (!tinsAdded) {
-    addTins();
+    addPieTins();
   }
 
   if(category === 'piechart') {
     d3.selectAll(".tin")
-      .transition().delay(delay).duration(duration)
+      .transition().delay(delay).duration(0)
       .style("fill", "transparent")
       .style("stroke", "lightgrey")
       .style("stroke-width", "0.01");
   } else {
     d3.selectAll(".tin")
-      .transition().delay(delay).duration(duration)
+      .transition().delay(delay).duration(0)
       .style("fill", categoryToColor(category))
       .style("stroke", "transparent"); // we should repoint this to use a lookup in styles.js
 
   }
 }
-
-
