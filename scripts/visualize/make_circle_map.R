@@ -65,13 +65,13 @@ visualize.make_pie_map <- function(viz){
   plot(sf::st_geometry(map_data_usa), col = "grey88", border = NA)
   plot(sf::st_geometry(map_data_county), col = NA, border = "grey93", add=TRUE, lwd = 0.5)
   plot(sf::st_geometry(map_data_state), col = NA, border = "white", add=TRUE, lwd = 0.75)
-  
+
   # start w/ irrigation, fill around the categories (make sure they add up!)
   # note: they don't add up because we aren't including all
   categories <- c("irrigation", "industrial", "thermoelectric", "publicsupply")
-  
+
   for (j in seq_len(length(circle_sp_transf))){
-    # this is in a loop because it is throwaway code: 
+    # this is in a loop because it is throwaway code:
     orig_ang <- 0
     r <- circle_sp_transf$radius_total[j] *rad_multiplier
     c.x <- coordinates(circle_sp_transf)[j, ][['x']]
@@ -88,38 +88,48 @@ visualize.make_pie_map <- function(viz){
       angle_to <- angle_from + cat_angle
       if (!is.na(cat_angle) & cat_angle > 0.01){
         segments <- make_arc(c.x, c.y, r = r, angle_from, angle_to)
-        polygon(c(c.x, segments$x, c.x), c(c.y, segments$y, c.y), 
+        polygon(c(c.x, segments$x, c.x), c(c.y, segments$y, c.y),
                 border = NA,
                 col = color_by_wu_type(cat)$fill, lwd=0.25)
         lines(segments$x, segments$y, lwd=0.25, col = color_by_wu_type(cat)$outline)
       }
     }
     if (!is.na(r) & cat == tail(categories, 1L) & angle_to < 2*pi + orig_ang){
-      
+
       segments <- make_arc(c.x, c.y, r = r, angle_to, 2*pi + orig_ang)
-      polygon(c(c.x, segments$x, c.x), c(c.y, segments$y, c.y), 
+      polygon(c(c.x, segments$x, c.x), c(c.y, segments$y, c.y),
               border = NA,
               col = color_by_wu_type('other')$fill, lwd=0.25)
       lines(segments$x, segments$y, lwd=0.25, col = color_by_wu_type('other')$outline)
     }
+    if (circle_sp_transf@data$STATE[j] == "IN" && circle_sp_transf@data$COUNTY[j] == "Lake County"){
+      lines_final1 <- make_arc(c.x, c.y, r = r, 0, 2*pi)
+    }
+    if (circle_sp_transf@data$STATE[j] == "NC" && circle_sp_transf@data$COUNTY[j] == "Macon County"){
+      lines_final2 <- make_arc(c.x, c.y, r = r, 0, 2*pi)
+    }
   }
-  
+
   strt_x <- -1990000
   strt_y <- -2000000
   box_w <- 60000
   y_bump <- 30000
   text_st <- 0
-  
+
   categories <- c('other', rev(categories))
   for (cat in categories){
-    polygon(c(strt_x, strt_x+box_w, strt_x+box_w, strt_x, strt_x), 
-            c(strt_y, strt_y, strt_y+box_w, strt_y+box_w, strt_y), 
-            col = color_by_wu_type(cat)$fill, 
+    polygon(c(strt_x, strt_x+box_w, strt_x+box_w, strt_x, strt_x),
+            c(strt_y, strt_y, strt_y+box_w, strt_y+box_w, strt_y),
+            col = color_by_wu_type(cat)$fill,
             border = color_by_wu_type(cat)$outline,
             lwd=0.5)
     text(x = strt_x+box_w+text_st, y = strt_y+box_w/2, labels = cat, cex = 1.0, pos = 4)
     strt_y <- strt_y+y_bump+box_w
   }
+  
+  lines(lines_final1$x, lines_final1$y, col = 'black', lwd=2)
+  lines(lines_final2$x, lines_final2$y, col = 'black', lwd=2)
+  #plot(sf::st_geometry(filter(map_data_county, ID %in% c("indiana,lake","north carolina,macon"))), col = NA, border = "black", add=TRUE, lwd = 1)
   
   dev.off()
 }
@@ -139,14 +149,14 @@ color_by_wu_type <- function(wu_type) {
   switch(wu_type,
          "total" = list(outline = rgb(36/255, 107/255, 136/255),
                         fill = rgb(46/255, 134/255, 171/255, 0.8)),
-         "thermoelectric" = list(outline = rgb(201/255, 148/255, 3/255),
-                                 fill = rgb(252/255, 186/255, 4/255, 0.8)),
-         "publicsupply" = list(outline = rgb(36/255, 107/255, 136/255),
-                               fill = rgb(46/255, 134/255, 171/255, 0.8)),
-         "irrigation" = list(outline = rgb(124/255, 157/255, 48/255),
-                             fill = rgb(155/255, 197/255, 61/255, 0.8)),
-         "industrial" = list(outline = rgb(148/255, 40/255, 32/255),
-                             fill = rgb(186/255, 50/255, 40/255, 0.8)),
-         "other" = list(outline = rgb(138/255, 113/255, 106/255),
-                             fill = rgb(138/255, 113/255, 106/255, 0.6)))
+         "thermoelectric" = list(outline = rgb(237, 201, 72, maxColorValue = 255),
+                                 fill = rgb(237, 201, 72, alpha = 204, maxColorValue = 255)),
+         "publicsupply" = list(outline = rgb(118, 183, 178, maxColorValue = 255),
+                               fill = rgb(118, 183, 178, alpha = 204, maxColorValue = 255)),
+         "irrigation" = list(outline = rgb(89, 161, 79, maxColorValue = 255),
+                             fill = rgb(89, 161, 79, alpha = 204, maxColorValue = 255)),
+         "industrial" = list(outline = rgb(225, 87, 89, maxColorValue = 255),
+                             fill = rgb(225, 87, 89, alpha = 204, maxColorValue = 255)),
+         "other" = list(outline = rgb(169, 169, 169, maxColorValue = 255),
+                             fill = rgb(169, 169, 169, alpha = 180, maxColorValue = 255)))
 }
