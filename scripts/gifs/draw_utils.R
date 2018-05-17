@@ -319,7 +319,7 @@ add_legend <- function(categories, state_totals, frame = rep(1, length(categorie
     text(x = coord_space[1]+plot_width*0.45, y = strt_y-box_h, labels = simpleCap(this_legend$title), cex = 1.4)
     text(x = coord_space[1]+plot_width*0.45, y = strt_y-2*box_h, labels = "(water withdrawals, million gallons per day)", cex = 0.7)
   } else if (this_legend$title_pos == 'national'){
-    text(x = coord_space[1]+plot_width*0.45, y = strt_y-2*box_h, labels = simpleCap(this_legend$title), cex = 1.4)
+    text(x = coord_space[1]+plot_width*0.45, y = strt_y-3*box_h, labels = simpleCap(this_legend$title), cex = 1.4)
     text(x = strt_x+box_w/2, y = strt_y+box_h/4, labels = "(withdrawals, million gallons per day)", cex = 0.7)
   } else {
     stop(this_legend$title_pos, ' not supported')
