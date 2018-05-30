@@ -24,10 +24,14 @@ file_extensions:
 targets:
   all: 
     depends: 
-      - gifs/US_water_use.gif.ind
+      - gifs/US_total_use.gif
+      - gifs/US_therm_use.gif
+      - gifs/US_irr_use.gif
+      - gifs/US_pub_use.gif
+      - gifs/US_pie_use.gif
   
   plot_metadata:
-    command: c(I(6.5), I(5.2), I(300))
+    command: c(I(13.33), I(7.5), I(200))
   
   proj: 
     command: c(I("+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs"))
@@ -52,7 +56,29 @@ targets:
   plot_layout:
     command: get_national_layout(us_states, plot_metadata)
 
-  gifs/US_water_use.gif.ind:
+  gifs/US_total_use.gif:
     command: build_wu_gif(us_states, us_counties, us_county_dots, state_totals, plot_layout, 
       'images/usgs_logo_black.png', 
-      target_name, frames = I(5), I('pie'), I('thermoelectric'), I('irrigation'), I('publicsupply'), pause_delay = I('250'))
+      target_name, frames = I(4), I('total'), I('thermoelectric'), pause_delay = I('100250'))
+      
+  gifs/US_therm_use.gif:
+    command: build_wu_gif(us_states, us_counties, us_county_dots, state_totals, plot_layout, 
+      'images/usgs_logo_black.png', 
+      target_name, frames = I(4), I('thermoelectric'), I('irrigation'), pause_delay = I('100250'))
+      
+  gifs/US_irr_use.gif:
+    command: build_wu_gif(us_states, us_counties, us_county_dots, state_totals, plot_layout, 
+      'images/usgs_logo_black.png', 
+      target_name, frames = I(4), I('irrigation'), I('publicsupply'), pause_delay = I('100250'))
+      
+  gifs/US_pub_use.gif:
+    command: build_wu_gif(us_states, us_counties, us_county_dots, state_totals, plot_layout, 
+      'images/usgs_logo_black.png', 
+      target_name, frames = I(4), I('publicsupply'), I('industrial'),pause_delay = I('100250'))
+      
+  gifs/US_pie_use.gif:
+    command: build_wu_gif(us_states, us_counties, us_county_dots, state_totals, plot_layout, 
+      'images/usgs_logo_black.png', 
+      target_name, frames = I(4), I('industrial'), I('pie'),pause_delay = I('100250'))
+
+

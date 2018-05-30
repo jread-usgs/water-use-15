@@ -6,16 +6,8 @@ get_national_layout <- function(sp, plot_metadata){
                      map = list(xlim = c(NA_integer_, NA_integer_), ylim = c(NA_integer_, NA_integer_)),
                      legend = list(xpct = NA_integer_, ypct = NA_integer_, box_h = 0.055, y_bump = 0.015,
                                    title_pos = 'top', title = 'U.S. Water Use, 2015'))
-  aspect_map <- diff(state_bb[c(1,3)])/diff(state_bb[c(2,4)])
-  aspect_fig <- plot_metadata[1]/plot_metadata[2]
-  map_ratio <- aspect_map / aspect_fig
-  y_remain <- 0.74 # 
-  map_span <- diff(state_bb[c(2,4)])/y_remain
-  sp_width <- diff(state_bb[c(1,3)])
-  y2 <- state_bb[4]
-  y1 <- y2 - map_span
-  layout_out$map$ylim <- c(y1, y2)
-  layout_out$map$xlim <- c(state_bb[1]-0.01*sp_width, state_bb[3]+0.01*sp_width)
+  layout_out$map$ylim <- NULL
+  layout_out$map$xlim <- NULL
   layout_out$legend$xpct <- 0.67 # percentage relative to left for the left edge of the legend
   layout_out$legend$ypct <- 0.015 # percentage relative to bottom for the bottom of the legend
   layout_out$legend$box_h <- 0.043
@@ -105,17 +97,17 @@ plot_national_pies <- function(us_states, us_counties, us_dots, metadata, waterm
 plot_dot_map <- function(state_sp, county_sp, watermark_file, layout){
   
   if (length(unique(names(state_sp))) > 1){ # is national
-    par(mai=c(0,0,0,0), omi=c(0,0,0,0), xaxs = 'i', yaxs = 'i') 
+    par(mai=c(0,0,0,0), omi=c(0,0,0,0))#, xaxs = 'i', yaxs = 'i') 
     plot(state_sp, col = NA, border = NA, lwd = 1.2, xlim = layout$map$xlim, ylim = layout$map$ylim) 
-    plot(county_sp, col = '#eaedef', border = "grey80", lwd=0.2, add = TRUE)
-    plot(state_sp, col = NA, border = "grey65", lwd = .6, add = TRUE)
+    plot(county_sp, col = '#eaedef', border = "grey97", lwd=0.4, add = TRUE)
+    plot(state_sp, col = NA, border = "white", lwd = 0.7, add = TRUE)
   } else {
     par(mai=c(0,0,0,0), omi=c(0,0,0,0), bg = '#eaedef') #, xaxs = 'i', yaxs = 'i'
     plot(county_sp, col = "white", border = "grey60", lwd=0.75, xlim = layout$map$xlim, ylim = layout$map$ylim) 
     plot(state_sp, col = NA, border = "grey50", lwd = 1.2, add = TRUE)
   }
   
-  add_watermark(watermark_file, layout)
+  #add_watermark(watermark_file, layout)
 }
 
 calc_frame_filenames <- function(frames, ...){
@@ -136,6 +128,7 @@ calc_frame_filenames <- function(frames, ...){
       subframe_i <- 1
     }
   }
+  filenames <- head(filenames, -(frames-2))
   return(filenames)
 }
 
@@ -185,7 +178,12 @@ build_wu_gif <- function(state_sp, county_sp, dots_sp, state_totals, state_layou
         cat_frames <- rep(frames, length(legend_cats))
         cat_frames[legend_cats == cat] <- 1
         add_legend(legend_cats, state_totals, frame = cat_frames, frames = frames, layout = state_layout)
-        gifsicle_out <- paste0(gifsicle_out, sprintf('-d%s "#%s" ', pause_delay, frame_num))
+        if (filename == frame_filenames[1L]){
+          gifsicle_out <- paste0(gifsicle_out, sprintf('-d%s "#%s" ', trans_delay, frame_num)) #transition right away
+        } else {
+          gifsicle_out <- paste0(gifsicle_out, sprintf('-d%s "#%s" ', pause_delay, frame_num))
+        }
+        
       } else {
         plot_dot_transitions(dots_sp, file_pieces[1], file_pieces[2], frames, frame, state_totals, layout = state_layout)
         gifsicle_out <- paste0(gifsicle_out, sprintf('-d%s "#%s" ', trans_delay, frame_num))
@@ -196,12 +194,12 @@ build_wu_gif <- function(state_sp, county_sp, dots_sp, state_totals, state_layou
     
   }
   
-  gif_filename <- as_data_file(ind_file)
+  gif_filename <- ind_file
   
   system(paste0("convert -loop 0 -delay 15 ", paste(file.path(temp_dir, frame_filenames), collapse = " "), " ", gif_filename))
   
-  system(sprintf('gifsicle -b %s %s --colors 256', gif_filename, gifsicle_out))
-  gd_put(remote_ind = ind_file, local_source = gif_filename, config_file = 'gifs/gd_config.yml')
+  system(sprintf('gifsicle -b %s %s --colors 256 ', gif_filename, gifsicle_out))
+  #gd_put(remote_ind = ind_file, local_source = gif_filename, config_file = 'gifs/gd_config.yml')
 }
 
 categories <- function(){
@@ -218,7 +216,7 @@ cat_title <- function(cat){
 }
 
 cat_col <- function(cat){
-  cols <- c("irrigation" = "#59a14f", "industrial"="#e15759", 
+  cols <- c("irrigation" = "#59a14f", "industrial"="#e15759", 'total' = '#2E86AB',
             "thermoelectric"="#edc948", "publicsupply"="#76b7b2", "other"="#A9A9A9", 
             "dead"='#dcdcdc', 'text'= '#A9A9A9')
   cols[[cat]]
@@ -280,6 +278,7 @@ plot_pie_transitions <- function(dots_sp, cat_to, frames = 5, frame, state_total
 }
 
 add_legend <- function(categories, state_totals, frame = rep(1, length(categories)), frames = 5, layout){
+  return()
   alpha_hex <- rev(c("00", "1A", "33", "4D", "66", "80", "99", "B3", "CC", "E6", "FF"))
   
   this_legend <- layout$legend
