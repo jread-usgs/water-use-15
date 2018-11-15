@@ -43,4 +43,4 @@ targets:
     command: shift_centroids(county_dots)
   
   figures/national_pies.png:
-    command: plot_national_pies(us_states, us_counties, us_dots, plot_metadata, target_name)
+    command: plot_national_pies(us_counties, us_dots, metadata = plot_metadata, target_name) #us_states
